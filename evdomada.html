@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Μεγάλη Εβδομάδα - Πλήρης Εφαρμογή</title>
+    <link href="https://fonts.googleapis.com/css2?family=GFS+Didot&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fdfaf6; 
+            --txt: #2c3e50; 
+            --acc: #b22222;
+            --sheet-bg: #2c3e50; /* Σκούρο φόντο στο light mode για αντίθεση */
+            --sheet-txt: #ffffff; 
+            --switch-bg: #ffd700;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212; 
+            --txt: #e0e0e0; 
+            --acc: #ff6b6b;
+            --sheet-bg: #000000; /* Μαύρο φόντο στο dark mode */
+            --sheet-txt: #ffffff; 
+            --switch-bg: #555;
+        }
+
+        body {
+            font-family: 'GFS Didot', serif; 
+            background: var(--bg); 
+            color: var(--txt);
+            line-height: 1.8; 
+            margin: 0; 
+            padding-bottom: 250px; 
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+
+        /* Navigation Bar */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; background: var(--bg);
+            padding: 15px 0; z-index: 1000; border-bottom: 2px solid var(--acc);
+        }
+
+        .controls { display: flex; gap: 15px; align-items: center; }
+
+        /* Voice Button */
+        #voice-btn {
+            width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--acc);
+            background: none; color: var(--acc); cursor: pointer; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Voice Overlay */
+        #voice-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95); color: white; padding: 30px;
+            border-radius: 20px; text-align: center; z-index: 2000;
+            display: none; width: 250px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Theme Switch */
+        .theme-switch {
+            position: relative; width: 60px; height: 30px; background: var(--switch-bg);
+            border-radius: 15px; cursor: pointer; display: flex; align-items: center;
+        }
+        .handle {
+            width: 22px; height: 22px; background: white; border-radius: 50%;
+            position: absolute; left: 4px; transition: 0.4s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        [data-theme="dark"] .handle { transform: translateX(30px); }
+
+        /* Content */
+        h1 { font-size: 1.4rem; margin: 0; color: var(--acc); }
+        h3 { color: var(--acc); border-bottom: 1px solid; margin-top: 40px; }
+        .rubric { color: var(--acc); font-style: italic; text-align: center; margin: 30px 0; font-size: 0.9rem; }
+        .glossary-term { color: var(--acc); border-bottom: 1px dashed var(--acc); cursor: pointer; font-weight: bold; }
+        .highlight { background: rgba(178, 34, 34, 0.25); border-radius: 5px; transition: 0.5s; }
+
+        /* Bottom Sheet - Διορθωμένο για ορατότητα */
+        #explanation-sheet {
+            position: fixed; bottom: -100%; left: 0; right: 0;
+            background: var(--sheet-bg); 
+            color: var(--sheet-txt) !important; /* Force λευκά γράμματα για αντίθεση */
+            padding: 30px; border-radius: 25px 25px 0 0;
+            z-index: 1001; transition: 0.4s cubic-bezier(0.17, 0.84, 0.44, 1);
+            max-height: 40vh; overflow-y: auto; 
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+            border-top: 4px solid var(--acc);
+        }
+        #explanation-sheet.active { bottom: 0; }
+        
+        #sheet-content strong { color: var(--acc); display: block; margin-bottom: 10px; font-size: 1.2rem; }
+        #sheet-content p { margin: 0; font-size: 1.1rem; line-height: 1.6; color: #ffffff; }
+
+        .close-sheet { 
+            float: right; cursor: pointer; font-size: 2rem; line-height: 1;
+            color: var(--acc); margin-top: -10px;
+        }
+    </style>
+</head>
+<body onclick="closeSheet()">
+
+<div id="voice-overlay">
+    <div style="color:#ff6b6b; font-size: 1.5rem; margin-bottom:10px;">●</div>
+    <p>Ακούω τον ψάλτη...</p>
+    <div id="voice-transcript" style="font-style: italic; color: #aaa; font-size: 0.9rem;"></div>
+</div>
+
+<div class="container">
+    <div class="top-bar">
+        <h1>Μεγάλη Εβδομάδα</h1>
+        <div class="controls">
+            <button id="voice-btn" onclick="startVoice(event)" title="Φωνητικός Συγχρονισμός">🎤</button>
+            <div class="theme-switch" onclick="toggleTheme(event)">
+                <div class="handle"><span id="theme-icon">☀️</span></div>
+            </div>
+        </div>
+    </div>
+
+    <main id="app"></main>
+</div>
+
+<div id="explanation-sheet" onclick="event.stopPropagation()">
+    <span class="close-sheet" onclick="closeSheet()">×</span>
+    <div id="sheet-content"></div>
+</div>
+
+<script>
+    const sequenceData = [
+        { type: "rubric", content: "Εὐλογήσαντος τοῦ Ἱερέως, ὁ Ἐξάψαλμος..." },
+        { 
+            type: "hymn", title: "Τροπάριον Νυμφίου", 
+            content: `Ἰδοὺ ὁ <span class="glossary-term" data-term="Νυμφίος" data-def="Ο Χριστός, ο οποίος έρχεται ως πνευματικός σύζυγος της κάθε ψυχής. Η εικόνα του Νυμφίου συμβολίζει την αγάπη και την ετοιμότητα που πρέπει να έχουμε.">Νυμφίος</span> ἔρχεται ἐν τῷ μέσῳ τῆς νυκτός· καὶ μακάριος ὁ δοῦλος, ὃν εὑρήσει <span class="glossary-term" data-term="γρηγοροῦντα" data-def="Σε κατάσταση πνευματικής εγρήγορσης, νήψης και προσευχής. Αυτός που δεν έχει αποκοιμηθεί πνευματικά στην αμαρτία.">γρηγοροῦντα</span>· ἀνάξιος δὲ πάλιν, ὃν εὑρήσει <span class="glossary-term" data-term="ῥαθυμοῦντα" data-def="Αυτόν που δείχνει πνευματική αδιαφορία, αμέλεια και τεμπελιά ως προς τα πνευματικά του καθήκοντα.">ῥαθυμοῦντα</span>.` 
+        },
+        { type: "rubric", content: "Καὶ εὐθὺς ψάλλομεν τὰ Καθίσματα..." },
+        { 
+            type: "hymn", title: "Κάθισμα", 
+            content: "Τὰ Πάθη τὰ σεπτά, ἡ παροῦσα ἡμέρα, ὡς φῶτα σωστικά, ἀνατέλλει τῷ κόσμῳ..." 
+        }
+    ];
+
+    function normalize(text) {
+        return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    }
+
+    function render() {
+        const app = document.getElementById('app');
+        app.innerHTML = sequenceData.map((item, idx) => {
+            if (item.type === 'rubric') return `<div class="rubric">${item.content}</div>`;
+            return `<section id="sec-${idx}"><h3>${item.title}</h3><p>${item.content}</p></section>`;
+        }).join('');
+
+        document.querySelectorAll('.glossary-term').forEach(el => {
+            el.onclick = (e) => { 
+                e.stopPropagation(); 
+                openSheet(e.target.dataset.term, e.target.dataset.def); 
+            };
+        });
+    }
+
+    // Voice Sync Logic
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let rec = null;
+    if (SpeechRec) {
+        rec = new SpeechRec();
+        rec.lang = 'el-GR';
+        rec.interimResults = true;
+
+        rec.onstart = () => { document.getElementById('voice-overlay').style.display = 'block'; };
+        rec.onresult = (e) => {
+            let text = e.results[0][0].transcript;
+            document.getElementById('voice-transcript').innerText = text;
+            if (e.results[0].isFinal) {
+                setTimeout(() => {
+                    document.getElementById('voice-overlay').style.display = 'none';
+                    findAndScroll(normalize(text));
+                }, 600);
+            }
+        };
+        rec.onerror = () => { document.getElementById('voice-overlay').style.display = 'none'; };
+        rec.onend = () => { document.getElementById('voice-overlay').style.display = 'none'; };
+    }
+
+    function startVoice(e) {
+        e.stopPropagation();
+        if (!rec) return alert("Απαιτείται HTTPS ή Live Server για το μικρόφωνο.");
+        rec.start();
+    }
+
+    function findAndScroll(query) {
+        sequenceData.forEach((item, idx) => {
+            if (normalize(item.content).includes(query)) {
+                const el = document.getElementById(`sec-${idx}`);
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('highlight');
+                setTimeout(() => el.classList.remove('highlight'), 3000);
+            }
+        });
+    }
+
+    // UI Logic
+    function openSheet(term, def) {
+        document.getElementById('sheet-content').innerHTML = `<strong>${term}</strong><p>${def}</p>`;
+        document.getElementById('explanation-sheet').classList.add('active');
+    }
+    
+    function closeSheet() { document.getElementById('explanation-sheet').classList.remove('active'); }
+
+    function toggleTheme(e) {
+        e.stopPropagation();
+        const body = document.body;
+        const icon = document.getElementById('theme-icon');
+        if (body.hasAttribute('data-theme')) {
+            body.removeAttribute('data-theme'); icon.innerText = "☀️";
+        } else {
+            body.setAttribute('data-theme', 'dark'); icon.innerText = "🌙";
+        }
+    }
+
+    render();
+</script>
+</body>
+</html>
