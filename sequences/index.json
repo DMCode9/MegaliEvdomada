@@ -1,0 +1,72 @@
+[
+  {
+    "id": "kiriaki-ton-vaion-esperas",
+    "title": "Κυριακή των Βαίων εσπέρας",
+    "file": "kiriaki-ton-vaion-esperas.md"
+  },
+  {
+    "id": "megali-deftera-proi",
+    "title": "Μεγάλη Δευτέρα πρωί",
+    "file": "megali-deftera-proi.md"
+  },
+  {
+    "id": "megali-deftera-esperas",
+    "title": "Μεγάλη Δευτέρα εσπέρας",
+    "file": "megali-deftera-esperas.md"
+  },
+  {
+    "id": "megali-triti-proi",
+    "title": "Μεγάλη Τρίτη πρωί",
+    "file": "megali-triti-proi.md"
+  },
+  {
+    "id": "megali-triti-esperas",
+    "title": "Μεγάλη Τρίτη εσπέρας",
+    "file": "megali-triti-esperas.md"
+  },
+  {
+    "id": "megali-tetarti-proi",
+    "title": "Μεγάλη Τετάρτη πρωί",
+    "file": "megali-tetarti-proi.md"
+  },
+  {
+    "id": "megali-tetarti-esperas",
+    "title": "Μεγάλη Τετάρτη εσπέρας",
+    "file": "megali-tetarti-esperas.md"
+  },
+  {
+    "id": "megali-pempti-proi",
+    "title": "Μεγάλη Πέμπτη πρωί",
+    "file": "megali-pempti-proi.md"
+  },
+  {
+    "id": "megali-pempti-esperas",
+    "title": "Μεγάλη Πέμπτη εσπέρας",
+    "file": "megali-pempti-esperas.md"
+  },
+  {
+    "id": "megali-paraskevi-proi",
+    "title": "Μεγάλη Παρασκευή πρωί",
+    "file": "megali-paraskevi-proi.md"
+  },
+  {
+    "id": "megali-paraskevi-esperas",
+    "title": "Μεγάλη Παρασκευή εσπέρας",
+    "file": "megali-paraskevi-esperas.md"
+  },
+  {
+    "id": "megalo-savvato-proi",
+    "title": "Μεγάλο Σάββατο πρωί",
+    "file": "megalo-savvato-proi.md"
+  },
+  {
+    "id": "megalo-savvato-esperas",
+    "title": "Μεγάλο Σάββατο εσπέρας",
+    "file": "megalo-savvato-esperas.md"
+  },
+  {
+    "id": "kiriaki-tou-pasxa-proi",
+    "title": "Κυριακή του Πάσχα πρωί",
+    "file": "kiriaki-tou-pasxa-proi.md"
+  }
+]

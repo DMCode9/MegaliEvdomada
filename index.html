@@ -45,11 +45,28 @@
 
         .controls { display: flex; gap: 15px; align-items: center; }
 
+        .nav-btn {
+            border: 2px solid var(--acc);
+            background: none;
+            color: var(--acc);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .nav-btn[hidden] { display: none; }
+
         /* Voice Button */
         #voice-btn {
             width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--acc);
             background: none; color: var(--acc); cursor: pointer; font-size: 1.2rem;
             display: flex; align-items: center; justify-content: center;
+        }
+        #voice-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         /* Voice Overlay */
@@ -76,8 +93,49 @@
         h1 { font-size: 1.4rem; margin: 0; color: var(--acc); }
         h3 { color: var(--acc); border-bottom: 1px solid; margin-top: 40px; }
         .rubric { color: var(--acc); font-style: italic; text-align: center; margin: 30px 0; font-size: 0.9rem; }
+        .section-content p { margin: 0 0 16px; }
+        .section-content p:last-child { margin-bottom: 0; }
         .glossary-term { color: var(--acc); border-bottom: 1px dashed var(--acc); cursor: pointer; font-weight: bold; }
         .highlight { background: rgba(178, 34, 34, 0.25); border-radius: 5px; transition: 0.5s; }
+        .sequence-intro { margin: 30px 0 20px; text-align: center; }
+        .sequence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .sequence-card {
+            border: 1px solid rgba(178, 34, 34, 0.35);
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(178, 34, 34, 0.08), rgba(255, 215, 0, 0.12));
+            padding: 18px;
+            text-align: left;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            font-family: inherit;
+            color: var(--txt);
+        }
+        .sequence-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border-color: var(--acc);
+        }
+        .sequence-card strong {
+            color: var(--acc);
+            display: block;
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+        }
+        .sequence-card span {
+            display: block;
+            font-size: 0.92rem;
+            opacity: 0.85;
+        }
+        .status-message {
+            text-align: center;
+            margin: 40px 0;
+            font-size: 1rem;
+        }
 
         /* Bottom Sheet - Διορθωμένο για ορατότητα */
         #explanation-sheet {
@@ -111,8 +169,9 @@
 
 <div class="container">
     <div class="top-bar">
-        <h1>Μεγάλη Εβδομάδα</h1>
+        <h1 id="page-title">Μεγάλη Εβδομάδα</h1>
         <div class="controls">
+            <button id="back-btn" class="nav-btn" onclick="showSequenceCards(event)" hidden>Ακολουθίες</button>
             <button id="voice-btn" onclick="startVoice(event)" title="Φωνητικός Συγχρονισμός">🎤</button>
             <div class="theme-switch" onclick="toggleTheme(event)">
                 <div class="handle"><span id="theme-icon">☀️</span></div>
@@ -128,29 +187,163 @@
     <div id="sheet-content"></div>
 </div>
 
+<script src="sequences/bundle.js"></script>
 <script>
-    const sequenceData = [
-        { type: "rubric", content: "Εὐλογήσαντος τοῦ Ἱερέως, ὁ Ἐξάψαλμος..." },
-        { 
-            type: "hymn", title: "Τροπάριον Νυμφίου", 
-            content: `Ἰδοὺ ὁ <span class="glossary-term" data-term="Νυμφίος" data-def="Ο Χριστός, ο οποίος έρχεται ως πνευματικός σύζυγος της κάθε ψυχής. Η εικόνα του Νυμφίου συμβολίζει την αγάπη και την ετοιμότητα που πρέπει να έχουμε.">Νυμφίος</span> ἔρχεται ἐν τῷ μέσῳ τῆς νυκτός· καὶ μακάριος ὁ δοῦλος, ὃν εὑρήσει <span class="glossary-term" data-term="γρηγοροῦντα" data-def="Σε κατάσταση πνευματικής εγρήγορσης, νήψης και προσευχής. Αυτός που δεν έχει αποκοιμηθεί πνευματικά στην αμαρτία.">γρηγοροῦντα</span>· ἀνάξιος δὲ πάλιν, ὃν εὑρήσει <span class="glossary-term" data-term="ῥαθυμοῦντα" data-def="Αυτόν που δείχνει πνευματική αδιαφορία, αμέλεια και τεμπελιά ως προς τα πνευματικά του καθήκοντα.">ῥαθυμοῦντα</span>.` 
-        },
-        { type: "rubric", content: "Καὶ εὐθὺς ψάλλομεν τὰ Καθίσματα..." },
-        { 
-            type: "hymn", title: "Κάθισμα", 
-            content: "Τὰ Πάθη τὰ σεπτά, ἡ παροῦσα ἡμέρα, ὡς φῶτα σωστικά, ἀνατέλλει τῷ κόσμῳ..." 
-        }
-    ];
+    const SEQUENCE_INDEX_URL = 'sequences/index.json';
+    const DEFAULT_TITLE = 'Μεγάλη Εβδομάδα';
+    let sequenceList = [];
+    let sequenceData = [];
+    let currentSequence = null;
 
     function normalize(text) {
         return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     }
 
+    function stripHtml(text) {
+        return text.replace(/<[^>]*>/g, ' ');
+    }
+
+    function cloneData(data) {
+        return JSON.parse(JSON.stringify(data));
+    }
+
+    function getBundle() {
+        return window.SEQUENCE_BUNDLE || { index: [], texts: {} };
+    }
+
+    async function fetchJsonWithFallback(url, fallbackData, label) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            if (fallbackData) {
+                console.warn(`Χρήση fallback για ${label}:`, error);
+                return cloneData(fallbackData);
+            }
+            throw error;
+        }
+    }
+
+    async function fetchTextWithFallback(url, fallbackText, label) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return await response.text();
+        } catch (error) {
+            if (typeof fallbackText === 'string') {
+                console.warn(`Χρήση fallback για ${label}:`, error);
+                return fallbackText;
+            }
+            throw error;
+        }
+    }
+
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatInlineComments(text) {
+        const pattern = /\[([^\]]+)\]\{([^}]+)\}/g;
+        let result = '';
+        let lastIndex = 0;
+        let match;
+
+        while ((match = pattern.exec(text)) !== null) {
+            result += escapeHtml(text.slice(lastIndex, match.index));
+            result += `<span class="glossary-term" data-term="${escapeHtml(match[1])}" data-def="${escapeHtml(match[2])}">${escapeHtml(match[1])}</span>`;
+            lastIndex = pattern.lastIndex;
+        }
+
+        result += escapeHtml(text.slice(lastIndex));
+        return result;
+    }
+
+    function parseSequenceText(text) {
+        const lines = text.replace(/\r\n/g, '\n').split('\n');
+        const items = [];
+        let currentSection = null;
+        let paragraphLines = [];
+
+        function flushParagraph() {
+            if (!currentSection || paragraphLines.length === 0) return;
+            currentSection.paragraphs.push(paragraphLines.join(' '));
+            paragraphLines = [];
+        }
+
+        function flushSection() {
+            flushParagraph();
+            if (!currentSection) return;
+
+            items.push({
+                type: 'hymn',
+                title: currentSection.title,
+                contentHtml: currentSection.paragraphs.map((paragraph) => `<p>${formatInlineComments(paragraph)}</p>`).join(''),
+                searchText: currentSection.paragraphs.join(' ')
+            });
+            currentSection = null;
+        }
+
+        lines.forEach((line) => {
+            const trimmed = line.trim();
+
+            if (!trimmed) {
+                flushParagraph();
+                return;
+            }
+
+            if (trimmed.startsWith('# ')) {
+                return;
+            }
+
+            if (trimmed.startsWith('## ')) {
+                flushSection();
+                currentSection = {
+                    title: trimmed.slice(3).trim(),
+                    paragraphs: []
+                };
+                return;
+            }
+
+            if (trimmed.startsWith('> ')) {
+                flushSection();
+                items.push({
+                    type: 'rubric',
+                    contentHtml: formatInlineComments(trimmed.slice(2).trim()),
+                    searchText: trimmed.slice(2).trim()
+                });
+                return;
+            }
+
+            if (!currentSection) {
+                currentSection = {
+                    title: '',
+                    paragraphs: []
+                };
+            }
+
+            paragraphLines.push(trimmed);
+        });
+
+        flushSection();
+        return items;
+    }
+
     function render() {
         const app = document.getElementById('app');
         app.innerHTML = sequenceData.map((item, idx) => {
-            if (item.type === 'rubric') return `<div class="rubric">${item.content}</div>`;
-            return `<section id="sec-${idx}"><h3>${item.title}</h3><p>${item.content}</p></section>`;
+            if (item.type === 'rubric') return `<div class="rubric">${item.contentHtml}</div>`;
+            const titleHtml = item.title ? `<h3>${item.title}</h3>` : '';
+            return `<section id="sec-${idx}">${titleHtml}<div class="section-content">${item.contentHtml}</div></section>`;
         }).join('');
 
         document.querySelectorAll('.glossary-term').forEach(el => {
@@ -159,6 +352,91 @@
                 openSheet(e.target.dataset.term, e.target.dataset.def); 
             };
         });
+    }
+
+    function updateTopBar() {
+        document.getElementById('page-title').innerText = currentSequence ? currentSequence.title : DEFAULT_TITLE;
+        document.getElementById('back-btn').hidden = !currentSequence;
+        document.getElementById('voice-btn').disabled = !currentSequence || !rec || sequenceData.length === 0;
+    }
+
+    function renderStatus(message) {
+        const app = document.getElementById('app');
+        app.innerHTML = `<p class="status-message">${message}</p>`;
+    }
+
+    function renderSequenceCards() {
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="sequence-intro">
+                <p>Επίλεξε ακολουθία για να φορτωθεί το αντίστοιχο κείμενο από το δικό του JSON αρχείο.</p>
+            </div>
+            <div class="sequence-grid">
+                ${sequenceList.map((item) => `
+                    <button class="sequence-card" type="button" data-sequence-id="${item.id}">
+                        <strong>${item.title}</strong>
+                        <span>Φόρτωση από ${item.file}</span>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+
+        document.querySelectorAll('.sequence-card').forEach((card) => {
+            card.onclick = (e) => {
+                e.stopPropagation();
+                const selected = sequenceList.find((item) => item.id === card.dataset.sequenceId);
+                if (selected) {
+                    loadSequence(selected);
+                }
+            };
+        });
+    }
+
+    async function loadSequenceIndex() {
+        renderStatus('Φόρτωση ακολουθιών...');
+
+        try {
+            sequenceList = await fetchJsonWithFallback(SEQUENCE_INDEX_URL, getBundle().index, 'τη λίστα ακολουθιών');
+            currentSequence = null;
+            sequenceData = [];
+            updateTopBar();
+            renderSequenceCards();
+        } catch (error) {
+            console.error('Αποτυχία φόρτωσης λίστας ακολουθιών:', error);
+            renderStatus('Δεν ήταν δυνατή η φόρτωση της λίστας ακολουθιών. Άνοιξέ το μέσω Live Server ή τοπικού server.');
+        }
+    }
+
+    async function loadSequence(sequenceMeta) {
+        currentSequence = sequenceMeta;
+        sequenceData = [];
+        closeSheet();
+        updateTopBar();
+        renderStatus(`Φόρτωση: ${sequenceMeta.title}`);
+
+        try {
+            const rawText = await fetchTextWithFallback(
+                `sequences/${sequenceMeta.file}`,
+                getBundle().texts[sequenceMeta.file],
+                `την ακολουθία ${sequenceMeta.title}`
+            );
+            sequenceData = parseSequenceText(rawText);
+            updateTopBar();
+            render();
+        } catch (error) {
+            console.error('Αποτυχία φόρτωσης ακολουθίας:', error);
+            updateTopBar();
+            renderStatus('Δεν ήταν δυνατή η φόρτωση της συγκεκριμένης ακολουθίας. Άνοιξέ το μέσω Live Server ή τοπικού server.');
+        }
+    }
+
+    function showSequenceCards(e) {
+        if (e) e.stopPropagation();
+        currentSequence = null;
+        sequenceData = [];
+        closeSheet();
+        updateTopBar();
+        renderSequenceCards();
     }
 
     // Voice Sync Logic
@@ -186,14 +464,16 @@
 
     function startVoice(e) {
         e.stopPropagation();
+        if (!currentSequence) return alert("Επίλεξε πρώτα μία ακολουθία.");
         if (!rec) return alert("Απαιτείται HTTPS ή Live Server για το μικρόφωνο.");
         rec.start();
     }
 
     function findAndScroll(query) {
         sequenceData.forEach((item, idx) => {
-            if (normalize(item.content).includes(query)) {
+            if (item.type === 'hymn' && normalize(stripHtml(item.searchText || '')).includes(query)) {
                 const el = document.getElementById(`sec-${idx}`);
+                if (!el) return;
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 el.classList.add('highlight');
                 setTimeout(() => el.classList.remove('highlight'), 3000);
@@ -220,7 +500,8 @@
         }
     }
 
-    render();
+    updateTopBar();
+    loadSequenceIndex();
 </script>
 </body>
 </html>
