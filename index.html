@@ -3,22 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Μεγάλη Εβδομάδα - Voice Sync Pro</title>
+    <title>Μεγάλη Εβδομάδα - Πλήρης Εφαρμογή</title>
     <link href="https://fonts.googleapis.com/css2?family=GFS+Didot&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #fdfaf6; --txt: #2c3e50; --acc: #b22222;
-            --sheet-bg: #2c3e50; --sheet-txt: #ffffff; --switch-bg: #ffd700;
+            --bg: #fdfaf6; 
+            --txt: #2c3e50; 
+            --acc: #b22222;
+            --sheet-bg: #2c3e50; 
+            --sheet-txt: #ffffff; 
+            --switch-bg: #ffd700;
         }
 
         [data-theme="dark"] {
-            --bg: #121212; --txt: #e0e0e0; --acc: #ff6b6b;
-            --sheet-bg: #000000; --sheet-txt: #ffffff; --switch-bg: #555;
+            --bg: #121212; 
+            --txt: #e0e0e0; 
+            --acc: #ff6b6b;
+            --sheet-bg: #000000; 
+            --sheet-txt: #ffffff; 
+            --switch-bg: #555;
         }
 
         body {
-            font-family: 'GFS Didot', serif; background: var(--bg); color: var(--txt);
-            line-height: 1.8; margin: 0; padding-bottom: 100px; transition: 0.4s;
+            font-family: 'GFS Didot', serif; 
+            background: var(--bg); 
+            color: var(--txt);
+            line-height: 1.8; 
+            margin: 0; 
+            padding-bottom: 250px; 
+            transition: background 0.4s ease, color 0.4s ease;
         }
 
         .container { max-width: 700px; margin: 0 auto; padding: 20px; }
@@ -29,90 +42,135 @@
             padding: 15px 0; z-index: 1000; border-bottom: 2px solid var(--acc);
         }
 
+        .controls { display: flex; gap: 15px; align-items: center; }
+
         .nav-btn {
-            border: 2px solid var(--acc); background: none; color: var(--acc);
-            border-radius: 999px; padding: 8px 14px; cursor: pointer; font-family: inherit;
+            border: 2px solid var(--acc);
+            background: none;
+            color: var(--acc);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
         }
 
-        /* Voice Button Pulse */
+        .nav-btn[hidden] { display: none; }
+
+        /* Voice Button & Animation */
         #voice-btn {
-            width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--acc);
+            width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--acc);
             background: none; color: var(--acc); cursor: pointer; font-size: 1.2rem;
-            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
         }
-        #voice-btn.listening { background: var(--acc); color: white; animation: pulse 1.5s infinite; }
+        #voice-btn.active-rec {
+            background: var(--acc);
+            color: white;
+            animation: pulse-border 1.5s infinite;
+        }
 
-        @keyframes pulse {
+        @keyframes pulse-border {
             0% { box-shadow: 0 0 0 0 rgba(178, 34, 34, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(178, 34, 34, 0); }
+            70% { box-shadow: 0 0 0 10px rgba(178, 34, 34, 0); }
             100% { box-shadow: 0 0 0 0 rgba(178, 34, 34, 0); }
         }
 
         /* Voice Overlay & Waves */
         #voice-overlay {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.9); color: white; padding: 20px 40px;
-            border-radius: 50px; text-align: center; z-index: 2000;
-            display: none; width: 80%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.9); color: white; padding: 20px 30px;
+            border-radius: 25px; text-align: center; z-index: 2000;
+            display: none; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .wave-container {
-            display: flex; justify-content: center; align-items: center; gap: 4px; height: 30px; margin-bottom: 10px;
+        .wave-box {
+            display: flex; justify-content: center; align-items: center; gap: 3px; height: 20px; margin-bottom: 10px;
         }
-
         .wave-bar {
-            width: 4px; height: 10px; background: var(--acc); border-radius: 2px;
-            animation: wave 1s ease-in-out infinite;
+            width: 3px; height: 8px; background: var(--acc); border-radius: 2px;
+            animation: sound-wave 1s infinite ease-in-out;
         }
         .wave-bar:nth-child(2) { animation-delay: 0.1s; }
         .wave-bar:nth-child(3) { animation-delay: 0.2s; }
         .wave-bar:nth-child(4) { animation-delay: 0.3s; }
         .wave-bar:nth-child(5) { animation-delay: 0.4s; }
 
-        @keyframes wave {
-            0%, 100% { height: 10px; }
-            50% { height: 30px; }
+        @keyframes sound-wave {
+            0%, 100% { height: 8px; }
+            50% { height: 20px; }
         }
 
-        #voice-transcript { font-size: 1.1rem; min-height: 1.5em; font-weight: bold; }
-        #voice-status { font-size: 0.8rem; color: #ff6b6b; margin-top: 5px; text-transform: uppercase; }
-
-        /* Rest of UI */
+        /* Content Styles */
+        h1 { font-size: 1.4rem; margin: 0; color: var(--acc); }
         h3 { color: var(--acc); border-bottom: 1px solid; margin-top: 40px; }
-        .rubric { color: var(--acc); font-style: italic; text-align: center; margin: 30px 0; }
-        .highlight { background: rgba(178, 34, 34, 0.3) !important; transition: 1s; border-radius: 8px; }
+        .rubric { color: var(--acc); font-style: italic; text-align: center; margin: 30px 0; font-size: 0.9rem; }
+        .section-content p { margin: 0 0 16px; }
+        .glossary-term { color: var(--acc); border-bottom: 1px dashed var(--acc); cursor: pointer; font-weight: bold; }
+        .highlight { background: rgba(178, 34, 34, 0.35) !important; border-radius: 5px; transition: 0.5s; }
         
-        .sequence-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 20px; }
+        .sequence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
         .sequence-card {
-            border: 1px solid var(--acc); padding: 15px; border-radius: 12px;
-            background: rgba(178, 34, 34, 0.05); cursor: pointer; text-align: left;
+            border: 1px solid rgba(178, 34, 34, 0.35);
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(178, 34, 34, 0.08), rgba(255, 215, 0, 0.12));
+            padding: 18px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            color: var(--txt);
         }
 
         #explanation-sheet {
             position: fixed; bottom: -100%; left: 0; right: 0;
-            background: var(--sheet-bg); color: #fff; padding: 25px;
-            border-radius: 20px 20px 0 0; z-index: 1001; transition: 0.4s;
+            background: var(--sheet-bg); 
+            color: var(--sheet-txt) !important;
+            padding: 30px; border-radius: 25px 25px 0 0;
+            z-index: 1001; transition: 0.4s cubic-bezier(0.17, 0.84, 0.44, 1);
+            max-height: 40vh; overflow-y: auto; 
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+            border-top: 4px solid var(--acc);
         }
         #explanation-sheet.active { bottom: 0; }
-        .close-sheet { float: right; cursor: pointer; font-size: 1.5rem; }
+        .close-sheet { float: right; cursor: pointer; font-size: 2rem; color: var(--acc); }
+
+        .theme-switch {
+            position: relative; width: 60px; height: 30px; background: var(--switch-bg);
+            border-radius: 15px; cursor: pointer; display: flex; align-items: center;
+        }
+        .handle {
+            width: 22px; height: 22px; background: white; border-radius: 50%;
+            position: absolute; left: 4px; transition: 0.4s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        [data-theme="dark"] .handle { transform: translateX(30px); }
     </style>
 </head>
 <body onclick="closeSheet()">
 
 <div id="voice-overlay">
-    <div class="wave-container">
+    <div class="wave-box">
         <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
     </div>
-    <div id="voice-transcript">Ακούω...</div>
-    <div id="voice-status"></div>
+    <div id="voice-transcript" style="font-style: italic; color: #fff; font-size: 1rem;">Ακούω...</div>
+    <div id="voice-match-msg" style="color: #ffda44; font-size: 0.8rem; margin-top: 8px; font-weight: bold;"></div>
 </div>
 
 <div class="container">
     <div class="top-bar">
         <h1 id="page-title">Μεγάλη Εβδομάδα</h1>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <button id="back-btn" class="nav-btn" onclick="showSequenceCards()" hidden>Λίστα</button>
-            <button id="voice-btn" onclick="startVoice(event)">🎤</button>
+        <div class="controls">
+            <button id="back-btn" class="nav-btn" onclick="showSequenceCards(event)" hidden>Ακολουθίες</button>
+            <button id="voice-btn" onclick="startVoice(event)" title="Φωνητικός Συγχρονισμός">🎤</button>
+            <div class="theme-switch" onclick="toggleTheme(event)">
+                <div class="handle"><span id="theme-icon">☀️</span></div>
+            </div>
         </div>
     </div>
 
@@ -124,131 +182,202 @@
     <div id="sheet-content"></div>
 </div>
 
+<script src="sequences/bundle.js"></script>
 <script>
-    // Data & State
+    const SEQUENCE_INDEX_URL = 'sequences/index.json';
+    const DEFAULT_TITLE = 'Μεγάλη Εβδομάδα';
+    let sequenceList = [];
     let sequenceData = [];
     let currentSequence = null;
-    const app = document.getElementById('app');
-    
-    // Mock Data για την επίδειξη (Εδώ θα φορτώνονται τα JSON σας)
-    const mockIndex = [
-        { id: "m-triti", title: "Όρθρος Μεγάλης Τρίτης", file: "triti.txt" }
-    ];
-    const mockText = "## Ιδού ο Νυμφίος\nΙδού ο Νυμφίος έρχεται εν τω μέσω της νυκτός...\n> Ο λαός ψάλλει αργά.\n## Το τροπάριο της Κασσιανής\nΚύριε η εν πολλαίς αμαρτίαις περιπεσούσα γυνή...";
 
+    // --- Helper Functions ---
     function normalize(text) {
         return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     }
 
-    function parseText(text) {
-        return text.split('\n').filter(l => l.trim()).map(line => {
-            if (line.startsWith('## ')) return { type: 'hymn', title: line.replace('## ', ''), content: '' };
-            if (line.startsWith('> ')) return { type: 'rubric', content: line.replace('> ', '') };
-            return { type: 'text', content: line };
-        }).reduce((acc, curr) => {
-            if (curr.type === 'hymn') acc.push(curr);
-            else if (acc.length > 0) acc[acc.length-1].content += ' ' + curr.content;
-            return acc;
-        }, []);
+    function stripHtml(text) {
+        return text.replace(/<[^>]*>/g, ' ');
     }
 
+    function getBundle() {
+        return window.SEQUENCE_BUNDLE || { index: [], texts: {} };
+    }
+
+    async function fetchJsonWithFallback(url, fallbackData, label) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error();
+            return await response.json();
+        } catch (e) {
+            return JSON.parse(JSON.stringify(fallbackData));
+        }
+    }
+
+    async function fetchTextWithFallback(url, fallbackText, label) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error();
+            return await response.text();
+        } catch (e) {
+            return fallbackText;
+        }
+    }
+
+    function formatInlineComments(text) {
+        const pattern = /\[([^\]]+)\]\{([^}]+)\}/g;
+        return text.replace(pattern, (match, term, def) => {
+            return `<span class="glossary-term" data-term="${term}" data-def="${def}">${term}</span>`;
+        });
+    }
+
+    // --- Parser ---
+    function parseSequenceText(text) {
+        const lines = text.replace(/\r\n/g, '\n').split('\n');
+        const items = [];
+        let currentSection = null;
+
+        lines.forEach((line) => {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('# ')) return;
+
+            if (trimmed.startsWith('## ')) {
+                if (currentSection) items.push(currentSection);
+                currentSection = { type: 'hymn', title: trimmed.slice(3).trim(), paragraphs: [], searchText: "" };
+            } else if (trimmed.startsWith('> ')) {
+                if (currentSection) items.push(currentSection);
+                items.push({ type: 'rubric', contentHtml: formatInlineComments(trimmed.slice(2).trim()), searchText: trimmed.slice(2).trim() });
+                currentSection = null;
+            } else {
+                if (!currentSection) currentSection = { type: 'hymn', title: '', paragraphs: [], searchText: "" };
+                currentSection.paragraphs.push(`<p>${formatInlineComments(trimmed)}</p>`);
+                currentSection.searchText += " " + trimmed;
+            }
+        });
+        if (currentSection) items.push(currentSection);
+        return items;
+    }
+
+    // --- Core UI ---
     function render() {
-        app.innerHTML = sequenceData.map((item, idx) => `
-            <section id="sec-${idx}" style="padding:10px; margin-bottom:10px;">
-                ${item.type === 'hymn' ? `<h3>${item.title}</h3><p>${item.content}</p>` : `<div class="rubric">${item.content}</div>`}
-            </section>
-        `).join('');
+        const app = document.getElementById('app');
+        app.innerHTML = sequenceData.map((item, idx) => {
+            if (item.type === 'rubric') return `<div class="rubric">${item.contentHtml}</div>`;
+            return `<section id="sec-${idx}">${item.title ? `<h3>${item.title}</h3>` : ''}<div class="section-content">${item.paragraphs.join('')}</div></section>`;
+        }).join('');
+
+        document.querySelectorAll('.glossary-term').forEach(el => {
+            el.onclick = (e) => { 
+                e.stopPropagation(); 
+                openSheet(el.dataset.term, el.dataset.def); 
+            };
+        });
     }
 
-    function showSequenceCards() {
+    function updateTopBar() {
+        document.getElementById('page-title').innerText = currentSequence ? currentSequence.title : DEFAULT_TITLE;
+        document.getElementById('back-btn').hidden = !currentSequence;
+    }
+
+    async function loadSequenceIndex() {
+        sequenceList = await fetchJsonWithFallback(SEQUENCE_INDEX_URL, getBundle().index, 'index');
+        renderSequenceCards();
+    }
+
+    function renderSequenceCards() {
         currentSequence = null;
-        document.getElementById('back-btn').hidden = true;
-        document.getElementById('page-title').innerText = "Μεγάλη Εβδομάδα";
-        app.innerHTML = `<div class="sequence-grid">` + mockIndex.map(s => `
-            <div class="sequence-card" onclick="loadSeq()">
-                <strong>${s.title}</strong><br><small>Πατήστε για φόρτωση</small>
+        updateTopBar();
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="sequence-grid">
+                ${sequenceList.map((item) => `
+                    <button class="sequence-card" onclick="loadSequenceById('${item.id}')">
+                        <strong>${item.title}</strong>
+                        <span>${item.file}</span>
+                    </button>
+                `).join('')}
             </div>
-        `).join('') + `</div>`;
+        `;
     }
 
-    function loadSeq() {
-        currentSequence = true;
-        document.getElementById('back-btn').hidden = false;
-        document.getElementById('page-title').innerText = mockIndex[0].title;
-        sequenceData = parseText(mockText);
+    async function loadSequenceById(id) {
+        const meta = sequenceList.find(s => s.id === id);
+        if (!meta) return;
+        currentSequence = meta;
+        updateTopBar();
+        const rawText = await fetchTextWithFallback(`sequences/${meta.file}`, getBundle().texts[meta.file], meta.title);
+        sequenceData = parseSequenceText(rawText);
         render();
     }
 
-    // --- Voice Logic ---
+    function showSequenceCards(e) {
+        if (e) e.stopPropagation();
+        renderSequenceCards();
+    }
+
+    // --- Voice Sync Logic ---
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     let rec = null;
-
     if (SpeechRec) {
         rec = new SpeechRec();
         rec.lang = 'el-GR';
         rec.interimResults = true;
-        rec.continuous = false;
 
-        rec.onstart = () => {
+        rec.onstart = () => { 
             document.getElementById('voice-overlay').style.display = 'block';
-            document.getElementById('voice-btn').classList.add('listening');
-            document.getElementById('voice-status').innerText = "Αναμονή για ψαλμωδία...";
+            document.getElementById('voice-btn').classList.add('active-rec');
+            document.getElementById('voice-match-msg').innerText = "";
         };
-
+        
         rec.onresult = (e) => {
-            let transcript = Array.from(e.results)
-                .map(result => result[0].transcript)
-                .join('');
-            
-            document.getElementById('voice-transcript').innerText = transcript;
-            
-            // Δυναμική αναζήτηση καθώς μιλάει (Interim)
-            findAndScroll(transcript, false);
+            let text = e.results[0][0].transcript;
+            document.getElementById('voice-transcript').innerText = text;
+            findAndScroll(normalize(text));
         };
 
-        rec.onend = () => {
-            document.getElementById('voice-btn').classList.remove('listening');
-            setTimeout(() => {
-                document.getElementById('voice-overlay').style.display = 'none';
-                document.getElementById('voice-transcript').innerText = "Ακούω...";
-            }, 2000);
+        rec.onend = () => { 
+            document.getElementById('voice-btn').classList.remove('active-rec');
+            setTimeout(() => { document.getElementById('voice-overlay').style.display = 'none'; }, 2000);
         };
     }
 
     function startVoice(e) {
         e.stopPropagation();
-        if (!currentSequence) return alert("Επιλέξτε πρώτα Ακολουθία");
-        if (!rec) return alert("Το πρόγραμμα περιήγησης δεν υποστηρίζει φωνητική αναγνώριση.");
+        if (!currentSequence) return alert("Επίλεξε ακολουθία.");
+        if (!rec) return alert("Μη υποστηριζόμενο πρόγραμμα περιήγησης.");
         rec.start();
     }
 
-    function findAndScroll(query, isFinal) {
-        const cleanQuery = normalize(query);
-        if (cleanQuery.length < 4) return; // Αποφυγή μικρών λέξεων
-
-        let foundIdx = -1;
+    function findAndScroll(query) {
+        if (query.length < 4) return;
+        
         sequenceData.forEach((item, idx) => {
-            const source = normalize(item.title + " " + item.content);
-            if (source.includes(cleanQuery)) {
-                foundIdx = idx;
+            const textToSearch = normalize(item.title + " " + (item.searchText || ""));
+            if (textToSearch.includes(query)) {
+                const el = document.getElementById(`sec-${idx}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.classList.add('highlight');
+                    document.getElementById('voice-match-msg').innerText = "✓ Βρέθηκε ταύτιση!";
+                    setTimeout(() => el.classList.remove('highlight'), 3000);
+                }
             }
         });
-
-        if (foundIdx !== -1) {
-            const el = document.getElementById(`sec-${foundIdx}`);
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('highlight');
-            document.getElementById('voice-status').innerText = "✓ Βρέθηκε ταύτιση στο κείμενο!";
-            document.getElementById('voice-status').style.color = "#4caf50";
-            
-            setTimeout(() => el.classList.remove('highlight'), 3000);
-        }
     }
 
+    // --- Utils ---
+    function openSheet(term, def) {
+        document.getElementById('sheet-content').innerHTML = `<strong>${term}</strong><p>${def}</p>`;
+        document.getElementById('explanation-sheet').classList.add('active');
+    }
     function closeSheet() { document.getElementById('explanation-sheet').classList.remove('active'); }
-    
-    // Αρχική εμφάνιση
-    showSequenceCards();
+    function toggleTheme(e) {
+        e.stopPropagation();
+        const isDark = document.body.hasAttribute('data-theme');
+        if (isDark) { document.body.removeAttribute('data-theme'); document.getElementById('theme-icon').innerText = "☀️"; }
+        else { document.body.setAttribute('data-theme', 'dark'); document.getElementById('theme-icon').innerText = "🌙"; }
+    }
+
+    loadSequenceIndex();
 </script>
 </body>
 </html>
