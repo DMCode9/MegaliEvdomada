@@ -149,6 +149,28 @@
         .rubric { color: var(--acc); font-style: italic; text-align: center; margin: 30px 0; font-size: 0.95rem; opacity: 0.9; }
         .highlight { background: rgba(178, 34, 34, 0.25) !important; border-radius: 8px; transition: 0.6s ease; }
         
+        /* Settings Toggles */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .setting-label { font-weight: bold; color: var(--txt); }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--acc); }
+        input:checked + .slider:before { transform: translateX(24px); }
+        
+        /* Bilingual View */
+        .bilingual-grid { display: grid; gap: 20px; }
+        @media (min-width: 601px) {
+            .bilingual-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .translated-p {
+            border-left: 3px solid var(--acc);
+            padding-left: 15px;
+            color: var(--txt);
+            opacity: 0.9;
+        }
+        
         .days-grid {
             display: flex;
             flex-direction: column;
@@ -295,13 +317,16 @@
             border-bottom: 2px dotted var(--acc);
             transition: all 0.3s ease;
             padding-bottom: 1px;
+            -webkit-tap-highlight-color: transparent;
         }
-        .glossary-term:hover {
-            background: rgba(178, 34, 34, 0.1);
-            border-bottom-style: solid;
-        }
-        [data-theme="dark"] .glossary-term:hover {
-            background: rgba(255, 107, 107, 0.15);
+        @media (hover: hover) {
+            .glossary-term:hover {
+                background: rgba(178, 34, 34, 0.1);
+                border-bottom-style: solid;
+            }
+            [data-theme="dark"] .glossary-term:hover {
+                background: rgba(255, 107, 107, 0.15);
+            }
         }
 
         .modern-tooltip {
@@ -400,6 +425,25 @@
     <div class="dialog-content" style="position: relative;">
         <button class="close-dialog-btn" onclick="closeSettingsDialog()" aria-label="Κλείσιμο">✕</button>
         <h2>Ρυθμίσεις</h2>
+        
+        <div class="setting-group" style="margin-bottom: 25px;">
+            <h3 style="margin-bottom: 15px; color: var(--acc);">Απόδοση στα Νέα Ελληνικά</h3>
+            <div class="setting-row">
+                <span class="setting-label">Εμφάνιση αναδυόμενου σε λέξεις</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-tooltips" onchange="updateSettings()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Πλήρες κείμενο (Δίστηλο)</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-fulltext" onchange="updateSettings()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
         <div class="setting-group">
             <h3 style="margin-bottom: 5px; color: var(--acc);">Μέγεθος Γραμματοσειράς</h3>
             <div class="slider-container">
@@ -418,11 +462,26 @@
     let sequenceList = [];
     let sequenceData = [];
     let currentSequence = null;
+    let glossaryData = {};
+    let sortedGlossaryKeys = null;
+    let meShowTooltips = false;
+    let meShowFulltext = false;
 
     // --- Core Logic ---
     const normalize = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     
-    function getBundle() { return window.SEQUENCE_BUNDLE || { index: [], texts: {} }; }
+    function getBundle() { return window.SEQUENCE_BUNDLE || { index: [], texts: {}, glossary: {} }; }
+
+    window.addEventListener('hashchange', handleRoute);
+
+    function handleRoute() {
+        const hash = window.location.hash.slice(1);
+        if (hash && sequenceList.find(s => s.id === hash)) {
+            loadSequence(hash);
+        } else {
+            showSequenceCards();
+        }
+    }
 
     function loadSettings() {
         const savedTheme = localStorage.getItem('me_theme');
@@ -437,6 +496,19 @@
             document.getElementById('fontSizeValue').innerText = savedFontSize;
             document.getElementById('fontSizeSlider').value = savedFontSize;
         }
+
+        meShowTooltips = localStorage.getItem('me_tooltips') === 'true';
+        meShowFulltext = localStorage.getItem('me_fulltext') === 'true';
+        document.getElementById('toggle-tooltips').checked = meShowTooltips;
+        document.getElementById('toggle-fulltext').checked = meShowFulltext;
+    }
+
+    function updateSettings() {
+        meShowTooltips = document.getElementById('toggle-tooltips').checked;
+        meShowFulltext = document.getElementById('toggle-fulltext').checked;
+        localStorage.setItem('me_tooltips', meShowTooltips);
+        localStorage.setItem('me_fulltext', meShowFulltext);
+        if(currentSequence) render();
     }
 
     async function init() {
@@ -445,12 +517,19 @@
             const res = await fetch(SEQUENCE_INDEX_URL);
             sequenceList = res.ok ? await res.json() : getBundle().index;
         } catch(e) { sequenceList = getBundle().index; }
-        showSequenceCards();
+        
+        try {
+            const glRes = await fetch('sequences/glossary.json');
+            glossaryData = glRes.ok ? await glRes.json() : getBundle().glossary || {};
+        } catch(e) { glossaryData = getBundle().glossary || {}; }
+        
+        handleRoute();
     }
 
     function showSequenceCards(e) {
         if(e) e.stopPropagation();
         currentSequence = null;
+        window.scrollTo(0, 0);
         document.getElementById('page-title').innerText = "Μεγάλη Εβδομάδα";
         document.getElementById('nav-icon').innerText = "☰";
         document.getElementById('settings-btn').setAttribute("aria-label", "Μενού");
@@ -474,7 +553,7 @@
 
             let buttonsHtml = daySequences.map(s => {
                 let type = s.title.includes('πρωί') ? 'Πρωί' : (s.title.includes('εσπέρας') ? 'Εσπέρας' : 'Ακολουθία');
-                return `<button class="service-btn" onclick="loadSequence('${s.id}'); event.stopPropagation();">${type}</button>`;
+                return `<button class="service-btn" onclick="window.location.hash='${s.id}'; event.stopPropagation();">${type}</button>`;
             }).join('');
 
             let cardClass = day.key === 'kiriaki-tou-pasxa' ? 'day-card easter-card' : 'day-card';
@@ -502,6 +581,7 @@
         const meta = sequenceList.find(s => s.id === id);
         if(!meta) return;
         currentSequence = meta;
+        window.scrollTo(0, 0);
         document.getElementById('page-title').innerText = meta.title;
         document.getElementById('nav-icon').innerText = "←";
         document.getElementById('settings-btn').setAttribute("aria-label", "Επιστροφή");
@@ -520,21 +600,35 @@
         const lines = text.split('\n');
         const items = [];
         let currentHymn = null;
+        let isTranslating = false;
 
         lines.forEach(line => {
             const t = line.trim();
-            if(!t || t.startsWith('# ')) return;
+            if(!t || t.startsWith('# ')) {
+                isTranslating = false;
+                return;
+            }
 
             if(t.startsWith('## ')) {
+                isTranslating = false;
                 if(currentHymn) items.push(currentHymn);
                 currentHymn = { type: 'hymn', title: t.slice(3), paragraphs: [], searchPool: normalize(t.slice(3)) };
             } else if(t.startsWith('> ')) {
+                isTranslating = false;
                 if(currentHymn) items.push(currentHymn);
-                items.push({ type: 'rubric', content: formatGlossary(t.slice(2)) });
+                items.push({ type: 'rubric', content: t.slice(2) });
                 currentHymn = null;
+            } else if (t === '|||') {
+                isTranslating = true;
             } else {
                 if(!currentHymn) currentHymn = { type: 'hymn', title: '', paragraphs: [], searchPool: '' };
-                currentHymn.paragraphs.push(formatGlossary(t));
+                
+                if (isTranslating && currentHymn.paragraphs.length > 0) {
+                    const last = currentHymn.paragraphs[currentHymn.paragraphs.length - 1];
+                    last.translated += (last.translated ? " " : "") + t;
+                } else {
+                    currentHymn.paragraphs.push({ original: t, translated: '' });
+                }
                 currentHymn.searchPool += " " + normalize(t);
             }
         });
@@ -543,23 +637,72 @@
     }
 
     function formatGlossary(text) {
-        return text.replace(/\[([^\]]+)\]\{([^}]+)\}/g, '<span class="glossary-term" data-term="$1" data-def="$2">$1</span>');
+        if (!meShowTooltips) return text;
+        if (!glossaryData || Object.keys(glossaryData).length === 0) return text;
+        if (!sortedGlossaryKeys) {
+            sortedGlossaryKeys = Object.keys(glossaryData).sort((a,b) => b.length - a.length);
+        }
+        
+        const parts = text.split(/(<[^>]+>)/g);
+        for(let i=0; i<parts.length; i++) {
+            if(i % 2 === 0) {
+                let p = parts[i];
+                for (let word of sortedGlossaryKeys) {
+                    let idx = 0;
+                    while((idx = p.indexOf(word, idx)) !== -1) {
+                        const before = idx === 0 ? '' : p[idx-1];
+                        const after = idx + word.length === p.length ? '' : p[idx + word.length];
+                        // Exclude Greek punctuation: \u037E (;) and \u0387 (·)
+                        const isGrk = (c) => /[\u0370-\u037D\u037F-\u0386\u0388-\u03FF\u1F00-\u1FFF]/.test(c);
+                        
+                        if (!isGrk(before) && !isGrk(after)) {
+                            const def = glossaryData[word].replace(/"/g, '&quot;');
+                            const span = `<span class="glossary-term" data-term="${word}" data-def="${def}">${word}</span>`;
+                            p = p.slice(0, idx) + span + p.slice(idx + word.length);
+                            idx += span.length;
+                        } else {
+                            idx += word.length;
+                        }
+                    }
+                }
+                parts[i] = p;
+            }
+        }
+        return parts.join('');
     }
 
     function render() {
         const app = document.getElementById('app');
         app.innerHTML = sequenceData.map((item, idx) => {
-            if(item.type === 'rubric') return `<div class="rubric">${item.content}</div>`;
+            if(item.type === 'rubric') return `<div class="rubric">${formatGlossary(item.content)}</div>`;
             return `<section id="sec-${idx}">
                 ${item.title ? `<h3>${item.title}</h3>` : ''}
-                <div class="section-content">${item.paragraphs.map(p => `<p>${p}</p>`).join('')}</div>
+                <div class="section-content">
+                    ${item.paragraphs.map(p => {
+                        const origHtml = formatGlossary(p.original);
+                        if (meShowFulltext && p.translated) {
+                            return `<div class="bilingual-grid">
+                                        <p>${origHtml}</p>
+                                        <p class="translated-p">${p.translated}</p>
+                                    </div>`;
+                        }
+                        return `<p>${origHtml}</p>`;
+                    }).join('')}
+                </div>
             </section>`;
         }).join('');
 
         document.querySelectorAll('.glossary-term').forEach(el => {
-            el.addEventListener('mouseenter', (e) => showTooltip(el, e));
-            el.addEventListener('mouseleave', hideTooltip);
+            el.addEventListener('mouseenter', (e) => {
+                if (window.matchMedia('(hover: none)').matches) return;
+                showTooltip(el, e);
+            });
+            el.addEventListener('mouseleave', (e) => {
+                if (window.matchMedia('(hover: none)').matches) return;
+                hideTooltip();
+            });
             el.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 const tooltip = document.getElementById('modern-tooltip');
                 if (tooltip.classList.contains('active') && tooltip.dataset.term === el.dataset.term) {
@@ -575,8 +718,16 @@
 
     // --- UI Helpers ---
     function handleNavAction(e) {
-        if (currentSequence) showSequenceCards(e);
-        else openSettingsDialog(e);
+        e.stopPropagation();
+        if (currentSequence) {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.hash = '';
+            }
+        } else {
+            openSettingsDialog(e);
+        }
     }
     function openSettingsDialog(e) { e.stopPropagation(); document.getElementById('settingsDialog').showModal(); }
     function closeSettingsDialog() { document.getElementById('settingsDialog').close(); }

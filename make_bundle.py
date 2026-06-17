@@ -18,9 +18,17 @@ def run():
         else:
             texts[file_name] = ""
             
+    glossary_path = os.path.join(target_dir, 'glossary.json')
+    if os.path.exists(glossary_path):
+        with open(glossary_path, 'r', encoding='utf-8') as f:
+            glossary_data = json.load(f)
+    else:
+        glossary_data = {}
+        
     bundle = {
         "index": index_data,
-        "texts": texts
+        "texts": texts,
+        "glossary": glossary_data
     }
     
     bundle_js = f"window.SEQUENCE_BUNDLE = {json.dumps(bundle, ensure_ascii=False, indent=2)};"
