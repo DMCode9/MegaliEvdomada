@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Μεγάλη Εβδομάδα - Voice Sync Pro</title>
+    <title>Μεγάλη Εβδομάδα</title>
+    <link rel="icon" type="image/png" href="favicon.png?v=3">
+    <link rel="apple-touch-icon" href="favicon.png?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700&family=GFS+Didot&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -26,7 +28,7 @@
 
         body {
             font-family: 'GFS Didot', serif; background: var(--bg); color: var(--txt);
-            line-height: 1.8; margin: 0; padding-bottom: 250px; transition: 0.4s ease;
+            line-height: 1.8; margin: 0; padding-bottom: 40px; transition: 0.4s ease;
             font-size: var(--base-font-size);
         }
 
@@ -73,10 +75,13 @@
         .container { max-width: 700px; margin: 0 auto; padding: 20px; }
 
         .top-bar-wrapper {
-            position: sticky; top: 0; background: var(--bg);
+            background: var(--bg);
             z-index: 1000; border-bottom: 2px solid var(--acc);
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             transition: background 0.4s ease;
+        }
+        .top-bar-wrapper.sticky-header {
+            position: sticky; top: 0;
         }
 
         [data-theme="dark"] .top-bar-wrapper {
@@ -135,6 +140,7 @@
         @media (max-width: 600px) {
             body { line-height: 1.3; }
             h1#page-title { font-size: 1.8rem; gap: 6px; }
+            .desktop-only { display: none; }
         }
 
         /* Typography & UI */
@@ -150,9 +156,9 @@
         .highlight { background: rgba(178, 34, 34, 0.25) !important; border-radius: 8px; transition: 0.6s ease; }
         
         /* Settings Toggles */
-        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .setting-label { font-weight: bold; color: var(--txt); }
-        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; text-align: left; }
+        .setting-label { font-weight: bold; color: var(--txt); flex: 1; }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
@@ -160,13 +166,14 @@
         input:checked + .slider:before { transform: translateX(24px); }
         
         /* Bilingual View */
-        .bilingual-grid { display: grid; gap: 20px; }
+        .bilingual-grid { display: grid; gap: 4px; margin-bottom: 1.2em; }
+        .bilingual-grid p { margin: 0; }
         @media (min-width: 601px) {
-            .bilingual-grid { grid-template-columns: 1fr 1fr; }
+            .bilingual-grid { grid-template-columns: 1fr 1fr; gap: 15px; }
         }
         .translated-p {
             border-left: 3px solid var(--acc);
-            padding-left: 15px;
+            padding-left: 12px;
             color: var(--txt);
             opacity: 0.9;
         }
@@ -436,9 +443,20 @@
                 </label>
             </div>
             <div class="setting-row">
-                <span class="setting-label">Πλήρες κείμενο (Δίστηλο)</span>
+                <span class="setting-label">Πλήρες κείμενο <span class="desktop-only">(Δίστηλο)</span></span>
                 <label class="toggle-switch">
                     <input type="checkbox" id="toggle-fulltext" onchange="updateSettings()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="setting-group" style="margin-bottom: 25px;">
+            <h3 style="margin-bottom: 15px; color: var(--acc);">Περιβάλλον</h3>
+            <div class="setting-row">
+                <span class="setting-label">Σταθερή επικεφαλίδα</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-sticky" onchange="updateSettings()">
                     <span class="slider"></span>
                 </label>
             </div>
@@ -464,6 +482,7 @@
     let currentSequence = null;
     let glossaryData = {};
     let sortedGlossaryKeys = null;
+    let glossaryRegex = null;
     let meShowTooltips = false;
     let meShowFulltext = false;
 
@@ -501,6 +520,14 @@
         meShowFulltext = localStorage.getItem('me_fulltext') === 'true';
         document.getElementById('toggle-tooltips').checked = meShowTooltips;
         document.getElementById('toggle-fulltext').checked = meShowFulltext;
+
+        const meStickyHeader = localStorage.getItem('me_sticky') === 'true';
+        document.getElementById('toggle-sticky').checked = meStickyHeader;
+        if (meStickyHeader) {
+            document.querySelector('.top-bar-wrapper').classList.add('sticky-header');
+        } else {
+            document.querySelector('.top-bar-wrapper').classList.remove('sticky-header');
+        }
     }
 
     function updateSettings() {
@@ -508,6 +535,15 @@
         meShowFulltext = document.getElementById('toggle-fulltext').checked;
         localStorage.setItem('me_tooltips', meShowTooltips);
         localStorage.setItem('me_fulltext', meShowFulltext);
+
+        const meStickyHeader = document.getElementById('toggle-sticky').checked;
+        localStorage.setItem('me_sticky', meStickyHeader);
+        if (meStickyHeader) {
+            document.querySelector('.top-bar-wrapper').classList.add('sticky-header');
+        } else {
+            document.querySelector('.top-bar-wrapper').classList.remove('sticky-header');
+        }
+
         if(currentSequence) render();
     }
 
@@ -531,18 +567,17 @@
         currentSequence = null;
         window.scrollTo(0, 0);
         document.getElementById('page-title').innerText = "Μεγάλη Εβδομάδα";
-        document.getElementById('nav-icon').innerText = "☰";
-        document.getElementById('settings-btn').setAttribute("aria-label", "Μενού");
+        document.getElementById('settings-btn').style.display = "flex";
         
         const daysConfig = [
-            { name: "Κυριακή των Βαΐων", key: "kiriaki-ton-vaion", image: "palm_sunday.png" },
-            { name: "Μεγάλη Δευτέρα", key: "megali-deftera", image: "holy_monday.png" },
-            { name: "Μεγάλη Τρίτη", key: "megali-triti", image: "holy_tuesday.png" },
-            { name: "Μεγάλη Τετάρτη", key: "megali-tetarti", image: "holy_wednesday.png" },
-            { name: "Μεγάλη Πέμπτη", key: "megali-pempti", image: "holy_thursday.png" },
-            { name: "Μεγάλη Παρασκευή", key: "megali-paraskevi", image: "holy_friday.png" },
-            { name: "Μεγάλο Σάββατο", key: "megalo-savvato", image: "holy_saturday.png" },
-            { name: "Κυριακή του Πάσχα", key: "kiriaki-tou-pasxa", image: "easter_sunday.png" }
+            { name: "Κυριακή των Βαΐων", key: "kiriaki-ton-vaion", image: "palm_sunday.jpg" },
+            { name: "Μεγάλη Δευτέρα", key: "megali-deftera", image: "holy_monday.jpg" },
+            { name: "Μεγάλη Τρίτη", key: "megali-triti", image: "holy_tuesday.jpg" },
+            { name: "Μεγάλη Τετάρτη", key: "megali-tetarti", image: "holy_wednesday.jpg" },
+            { name: "Μεγάλη Πέμπτη", key: "megali-pempti", image: "holy_thursday.jpg" },
+            { name: "Μεγάλη Παρασκευή", key: "megali-paraskevi", image: "holy_friday.jpg" },
+            { name: "Μεγάλο Σάββατο", key: "megalo-savvato", image: "holy_saturday.jpg" },
+            { name: "Κυριακή του Πάσχα", key: "kiriaki-tou-pasxa", image: "easter_sunday.jpg" }
         ];
 
         let html = `<div class="days-grid">`;
@@ -583,8 +618,7 @@
         currentSequence = meta;
         window.scrollTo(0, 0);
         document.getElementById('page-title').innerText = meta.title;
-        document.getElementById('nav-icon').innerText = "←";
-        document.getElementById('settings-btn').setAttribute("aria-label", "Επιστροφή");
+        document.getElementById('settings-btn').style.display = "none";
 
         let rawText = "";
         try {
@@ -639,33 +673,30 @@
     function formatGlossary(text) {
         if (!meShowTooltips) return text;
         if (!glossaryData || Object.keys(glossaryData).length === 0) return text;
+        
         if (!sortedGlossaryKeys) {
             sortedGlossaryKeys = Object.keys(glossaryData).sort((a,b) => b.length - a.length);
         }
+        if (!glossaryRegex) {
+            const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = sortedGlossaryKeys.map(escapeRegExp).join('|');
+            glossaryRegex = new RegExp(`(${pattern})`, 'g');
+        }
         
+        const isGrk = (c) => /[\u0370-\u037D\u037F-\u0386\u0388-\u03FF\u1F00-\u1FFF]/.test(c);
+
         const parts = text.split(/(<[^>]+>)/g);
         for(let i=0; i<parts.length; i++) {
             if(i % 2 === 0) {
-                let p = parts[i];
-                for (let word of sortedGlossaryKeys) {
-                    let idx = 0;
-                    while((idx = p.indexOf(word, idx)) !== -1) {
-                        const before = idx === 0 ? '' : p[idx-1];
-                        const after = idx + word.length === p.length ? '' : p[idx + word.length];
-                        // Exclude Greek punctuation: \u037E (;) and \u0387 (·)
-                        const isGrk = (c) => /[\u0370-\u037D\u037F-\u0386\u0388-\u03FF\u1F00-\u1FFF]/.test(c);
-                        
-                        if (!isGrk(before) && !isGrk(after)) {
-                            const def = glossaryData[word].replace(/"/g, '&quot;');
-                            const span = `<span class="glossary-term" data-term="${word}" data-def="${def}">${word}</span>`;
-                            p = p.slice(0, idx) + span + p.slice(idx + word.length);
-                            idx += span.length;
-                        } else {
-                            idx += word.length;
-                        }
+                parts[i] = parts[i].replace(glossaryRegex, (match, p1, offset, string) => {
+                    const before = offset === 0 ? '' : string[offset - 1];
+                    const after = offset + match.length === string.length ? '' : string[offset + match.length];
+                    if (!isGrk(before) && !isGrk(after)) {
+                        const def = glossaryData[match].replace(/"/g, '&quot;');
+                        return `<span class="glossary-term" data-term="${match}" data-def="${def}">${match}</span>`;
                     }
-                }
-                parts[i] = p;
+                    return match;
+                });
             }
         }
         return parts.join('');
